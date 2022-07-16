@@ -47,6 +47,7 @@ let wordFront = ref<Word>({text: "", level: "", linkPronUS: "", linkPronUK: ""})
 let wordBack = ref<Word>({text: "", level: "", linkPronUS: "", linkPronUK: ""});
 let index = ref<number>(0);
 let interval: any;
+let audio: HTMLAudioElement = new Audio();
 
 const changeSide = () => {
     showFront.value = !showFront.value;
@@ -82,7 +83,10 @@ const playAudio = (accent: string) => {
     else {
         link = link + (showFront.value ? wordFront.value.linkPronUK : wordBack.value.linkPronUK);
     }
-    let audio = new Audio(link);
+    // if (!audio.paused) {
+    //     return;
+    // }
+    audio = new Audio(link);
     audio.play();
 }
 
@@ -141,14 +145,34 @@ defineExpose({
             <div
                 class="front absolute w-screen h-48 bg-beach-1 text-white flex justify-center items-center flex-col gap-4"
             >
-                <div class="level text-3xl" :title="'Level ' + wordFront.level">{{wordFront.level}}</div>
-                <div class="word font-bold text-5xl sm:text-8xl italic transition-all"> {{wordFront.text}}</div>
+                <div 
+                    :class="intervalTime !== 0 ? 'select-none' : '' " 
+                    class="level text-2xl sm:text-3xl" :title="'Level ' + wordFront.level"
+                >
+                    {{wordFront.level}}
+                </div>
+                <div 
+                    :class="intervalTime !== 0 ? 'select-none' : '' " 
+                    class="word font-bold text-4xl sm:text-8xl italic transition-all"
+                >
+                    {{wordFront.text}}
+                </div>
             </div>
             <div 
                 class="back absolute w-screen h-48 bg-beach-1 text-white flex justify-center items-center flex-col gap-4"
             >
-                <div class="level text-3xl" :title="'Level ' + wordBack.level">{{wordBack.level}}</div>
-                <div class="word font-bold text-5xl sm:text-8xl italic transition-all"> {{wordBack.text}}</div>
+                <div 
+                    :class="intervalTime !== 0 ? 'select-none' : '' " 
+                    class="level text-2xl sm:text-3xl" :title="'Level ' + wordBack.level"
+                >
+                    {{wordBack.level}}
+                </div>
+                <div
+                    :class="intervalTime !== 0 ? 'select-none' : '' " 
+                    class="word font-bold text-4xl sm:text-8xl italic transition-all"
+                > 
+                    {{wordBack.text}}
+                </div>
             </div>
         </div>
     </div>
@@ -176,4 +200,6 @@ defineExpose({
         }
     }
 }
+
+
 </style>
