@@ -51,7 +51,6 @@ try {
 	// shuffle words twice
 	shuffle(words.value)
 	shuffle(words.value)
-	console.log('fetch ok')
 }
 
 catch (err) {

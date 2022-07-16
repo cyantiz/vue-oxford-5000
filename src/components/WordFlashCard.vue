@@ -15,7 +15,6 @@ const props = defineProps({
 });
 
 watch(() => props.words, (newValue, oldValue: Word[]) => {
-    console.log('props changes');
     index.value = 0;
     wordFront.value = props.words[index.value];
     wordBack.value = props.words[index.value];
@@ -79,7 +78,6 @@ document.body.onkeyup = function (e: KeyboardEvent) {
 }
 
 onMounted(() => {
-    console.log('mounted ', props.words)
     index.value = 0;
     wordFront.value = props.words[index.value];
 });
