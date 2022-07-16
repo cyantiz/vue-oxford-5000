@@ -1,14 +1,22 @@
 <script setup lang="ts">
-import { ref, onMounted, Suspense } from 'vue';
-import WordFlashCard from './components/WordFlashCard.vue';
+import { Suspense } from 'vue';
 import Words from './pages/Words.vue';
+import Loading from './components/Loading.vue';
 
 
 </script>
 
 <template>
 	<Suspense>
-		<Words />
+		<template #default>
+			<Words />
+		</template>
+		<template #fallback>
+			<div class="w-screen h-screen">
+				<Loading />
+			</div>
+		</template>
+
 	</Suspense>
 </template>
 
@@ -20,11 +28,13 @@ import Words from './pages/Words.vue';
 	--beach-4: #3CBCC7;
 	--beach-5: #EAE1C8;
 	--beach-6: #DFC39D;
-
 }
+
 
 body {
 	font-family: 'JetBrains Mono', monospace;
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
+	-webkit-tap-highlight-color: transparent;
 }
 
 .bg-beach-1 {

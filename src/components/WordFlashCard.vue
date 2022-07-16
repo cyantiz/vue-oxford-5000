@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUpdated, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 interface Word {
     text: string,
     level: string,
@@ -12,6 +12,18 @@ const props = defineProps({
         type: Array<Word>,
         required: true,
     },
+    intervalTime: {
+        type: Number,
+        required: true,
+    },
+    isAutoPronounce: {
+        type: Boolean,
+        required: true,
+    },
+    autoPronounceAccent: {
+        type: String,
+        required: true,
+    }
 });
 
 watch(() => props.words, (newValue, oldValue: Word[]) => {
@@ -19,11 +31,22 @@ watch(() => props.words, (newValue, oldValue: Word[]) => {
     wordFront.value = props.words[index.value];
     wordBack.value = props.words[index.value];
 });
+watch(() => props.intervalTime, (newValue, oldValue: number) => {
+    clearInterval(interval);
+    ("interval cleared")
+    if (newValue === 0) return;
+    interval = setInterval(() => {
+        index.value = (index.value + 1) % props.words.length;
+        changeSide();
+    }, newValue);
+    ("interval created")
+});
 
 let showFront = ref(true);
 let wordFront = ref<Word>({text: "", level: "", linkPronUS: "", linkPronUK: ""});
 let wordBack = ref<Word>({text: "", level: "", linkPronUS: "", linkPronUK: ""});
 let index = ref<number>(0);
+let interval: any;
 
 const changeSide = () => {
     showFront.value = !showFront.value;
@@ -32,47 +55,62 @@ const changeSide = () => {
     } else {
         wordBack.value = props.words[index.value];
     }
+    // auto pronounce
+    if (!props.isAutoPronounce) return;
+    if (props.autoPronounceAccent === "US") {
+        playAudio("US");
+        return;
+    }
+    playAudio("UK");
 };
 
-const playAudio = (link: string) => {
-    link = 'https://www.oxfordlearnersdictionaries.com' + link;
+const toNextWord = () => {
+    index.value++;
+    changeSide();
+}
+const toPrevWord = () => {
+    if (index.value === 0) return;
+    index.value--;
+    changeSide();   
+}
+
+const playAudio = (accent: string) => {
+    let link = 'https://www.oxfordlearnersdictionaries.com';
+    if (accent === "US") {
+        link = link + (showFront.value ? wordFront.value.linkPronUS : wordBack.value.linkPronUS);
+    }
+    else {
+        link = link + (showFront.value ? wordFront.value.linkPronUK : wordBack.value.linkPronUK);
+    }
     let audio = new Audio(link);
     audio.play();
 }
 
 document.body.onkeyup = function (e: KeyboardEvent) {
+    //disabled when auto word changing on
+    if(props.intervalTime !== 0) return;
+
     //key up event
-    if (e.key == "ArrowUp") {
-        index.value++;
-        changeSide();
+    if (e.key == "ArrowDown") {
+        toNextWord();
         return;
     }
 
     //key down event
-    if (e.key == "ArrowDown") {
-        if (index.value === 0) return;
-        index.value--;
-        changeSide();
+    if (e.key == "ArrowUp") {
+        toPrevWord();
         return;
     }
 
     //key left event
-    if (e.key == "ArrowLeft" && showFront.value) {
-        playAudio(wordFront.value.linkPronUS);
-        return;
-    }
-    if(e.key == "ArrowLeft" && !showFront.value) {
-        playAudio(wordBack.value.linkPronUS);
+    if(e.key == "ArrowLeft") {
+        playAudio("US");
         return;
     }
 
     //key right event
-    if (e.key == "ArrowRight" && showFront.value) {
-        playAudio(wordFront.value.linkPronUK);
-        return;
-    }
-    if(e.key == "ArrowRight" && !showFront.value) {
-        playAudio(wordBack.value.linkPronUK);
+    if(e.key == "ArrowRight") {
+        playAudio("UK");
         return;
     }
 }
@@ -83,25 +121,34 @@ onMounted(() => {
 });
 
 
+
+defineExpose({
+    toNextWord,
+    toPrevWord,
+    playAudio,
+})
+
+
+
 </script>
 
 <template>
-    <div class="word-flash-card w-screen h-screen bg-transparent overflow-hidden">
-        <div class="word-flash-card-inner relative w-full h-full text-center transition-transform ease-in-out duration-500"
+    <div class="word-flash-card w-screen h-48 fixed z-[5] top-[50%] left-0 -translate-y-[50%] flex justify-center items-center bg-transparent overflow-hidden">
+        <div 
+            class="word-flash-card-inner relative flex justify-center items-center text-center transition-transform ease-in-out duration-500"
             :class="showFront ? 'show-front' : ' show-back'"
         >
             <div
-                class="front absolute w-full h-full bg-beach-2 text-white flex justify-center items-center flex-col gap-4"
+                class="front absolute w-screen h-48 bg-beach-1 text-white flex justify-center items-center flex-col gap-4"
             >
                 <div class="level text-3xl" :title="'Level ' + wordFront.level">{{wordFront.level}}</div>
-                <div class="word font-bold text-8xl italic"> {{wordFront.text}}</div>
+                <div class="word font-bold text-5xl sm:text-8xl italic transition-all"> {{wordFront.text}}</div>
             </div>
             <div 
-                class="back absolute w-full h-full bg-beach-1 text-white flex justify-center items-center flex-col gap-4"
+                class="back absolute w-screen h-48 bg-beach-1 text-white flex justify-center items-center flex-col gap-4"
             >
                 <div class="level text-3xl" :title="'Level ' + wordBack.level">{{wordBack.level}}</div>
-                <div class="word font-bold text-8xl italic"> {{wordBack.text}}</div>
-
+                <div class="word font-bold text-5xl sm:text-8xl italic transition-all"> {{wordBack.text}}</div>
             </div>
         </div>
     </div>
